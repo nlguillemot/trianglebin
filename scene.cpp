@@ -234,7 +234,7 @@ void ScenePaint(ID3D11RenderTargetView* backbufferRTV)
 		ImGui::SliderInt("Num triangles", &g_NumTris, 0, 100);
 		if (g_NumTris < 0) g_NumTris = 0;
 		
-		ImGui::SliderInt("Num pixels", &g_MaxNumPixels, 0, 10000000);
+		ImGui::SliderInt("Num pixels (in thousands)", &g_MaxNumPixels, 0, 50000);
 		if (g_MaxNumPixels < 0) g_MaxNumPixels = 0;
 		
 		if (ImGui::SliderInt("Num extra vertex floats", &g_NumExtraFloats, 0, 24))
@@ -261,7 +261,7 @@ void ScenePaint(ID3D11RenderTargetView* backbufferRTV)
 		D3D11_MAPPED_SUBRESOURCE mapped;
 		CHECKHR(dc->Map(g_MaxNumPixelsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped));
 
-		*(UINT32*)mapped.pData = g_MaxNumPixels;
+		*(UINT32*)mapped.pData = g_MaxNumPixels * 1000;
 		dc->Unmap(g_MaxNumPixelsBuffer, 0);
 	}
 
