@@ -27,3 +27,11 @@
 *.exe
 *.out
 *.app
+
+# VS things
+*.VC.db
+*.VC.opendb
+x64
+
+# imgui
+imgui.ini

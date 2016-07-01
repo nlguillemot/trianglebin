@@ -34,9 +34,13 @@ static ID3D11Buffer* g_MaxNumPixelsBuffer;
 
 static D3D11_VIEWPORT g_Viewport;
 
+// The vertex shader always outputs at least 8 floats:
+// float4 position, float4 color
+static const int kNumNonExtraFloats = 8;
+
 static int g_NumTris;
-static int g_MaxNumPixels;
-static int g_NumExtraFloats;
+static float g_MaxNumPixelsPercent;
+static int g_NumFloatsPerVertex = kNumNonExtraFloats;
 static int g_PixelFormatIndex;
 static int g_SampleCountIndex;
 
@@ -77,7 +81,7 @@ void RebuildShaders()
 		std::vector<D3D_SHADER_MACRO> defines;
 	};
 
-	std::string numExtraFloatsStr = std::to_string(g_NumExtraFloats);
+	std::string numExtraFloatsStr = std::to_string(g_NumFloatsPerVertex - kNumNonExtraFloats);
 	D3D_SHADER_MACRO numExtraFloatsMacro{ "NUM_EXTRA_FLOATs", numExtraFloatsStr.c_str() };
 
 	ShaderToCompile shadersToCompile[] = {
@@ -231,16 +235,18 @@ void ScenePaint(ID3D11RenderTargetView* backbufferRTV)
 	ImGui::SetNextWindowSize(ImVec2(550, 250), ImGuiSetCond_Once);
 	if (ImGui::Begin("Toolbox"))
 	{
-		ImGui::SliderInt("Num triangles", &g_NumTris, 0, 100);
+		ImGui::SliderInt("Num triangles", &g_NumTris, 0, 1000);
 		if (g_NumTris < 0) g_NumTris = 0;
 		
-		ImGui::SliderInt("Num pixels (in thousands)", &g_MaxNumPixels, 0, 50000);
-		if (g_MaxNumPixels < 0) g_MaxNumPixels = 0;
+		ImGui::SliderFloat("Num pixels (percent)", &g_MaxNumPixelsPercent, 0.0f, 1.0f);
+		if (g_MaxNumPixelsPercent < 0.0f) g_MaxNumPixelsPercent = 0.0f;
 		
-		if (ImGui::SliderInt("Num extra vertex floats", &g_NumExtraFloats, 0, 24))
+		if (ImGui::SliderInt("Num floats per vertex ", &g_NumFloatsPerVertex, 8, 32))
 		{
-			if (g_NumExtraFloats < 0)
-				g_NumExtraFloats = 0;
+			if (g_NumFloatsPerVertex < 8)
+                g_NumFloatsPerVertex = 8;
+            if (g_NumFloatsPerVertex > 32)
+                g_NumFloatsPerVertex = 32;
 
 			RebuildShaders();
 		}
@@ -261,7 +267,15 @@ void ScenePaint(ID3D11RenderTargetView* backbufferRTV)
 		D3D11_MAPPED_SUBRESOURCE mapped;
 		CHECKHR(dc->Map(g_MaxNumPixelsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped));
 
-		*(UINT32*)mapped.pData = g_MaxNumPixels * 1000;
+        // not exact, but good enough
+        float pixelsPerTri = 0.5f * g_Viewport.Width * g_Viewport.Height;
+
+        // some fudge factor added to the percent to make 100% always draw all triangles fully and 0% draw nothing
+        float pixelsPercent = g_MaxNumPixelsPercent;
+        if (pixelsPercent == 1.0f)
+            pixelsPercent = 1.01f;
+
+		*(UINT32*)mapped.pData = (UINT32)(pixelsPercent * pixelsPerTri * g_NumTris);
 		dc->Unmap(g_MaxNumPixelsBuffer, 0);
 	}
 
