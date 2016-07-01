@@ -45,12 +45,14 @@ static int g_PixelFormatIndex;
 static int g_SampleCountIndex;
 
 static const char* kPixelFormatNames[] = {
-	"R8G8B8A8_UNORM",
-	"R32G32B32A32_FLOAT"
+	"(32 bpp) R8G8B8A8_UNORM",
+    "(64 bpp) R16G16B16A16_UNORM",
+    "(128 bpp) R32G32B32A32_FLOAT"
 };
 
 static const DXGI_FORMAT kPixelFormatFormats[] = {
 	DXGI_FORMAT_R8G8B8A8_UNORM,
+    DXGI_FORMAT_R16G16B16A16_UNORM,
 	DXGI_FORMAT_R32G32B32A32_FLOAT
 };
 
