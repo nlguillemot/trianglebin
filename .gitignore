@@ -32,6 +32,7 @@
 *.VC.db
 *.VC.opendb
 x64
+.vs
 
 # imgui
 imgui.ini
